@@ -21,7 +21,7 @@ TEST(KalmanFilterTEST, _setval)
   Eigen::Vector3d att0(0.0, 0.0, -1.5812683023068610),
     vn0(0.0,0.0,0.0),
     pos0(0.59770629339601844, 1.9008322240407358, 380.00000000000000);
-  IMU_LIB::PSINS sins(IMU_LIB::rv2q(att0), vn0, pos0);
+  IMU_LIB::PSINS sins(att0, vn0, pos0);
   const IMU_LIB::IMUCommonStruct imucommonpara;
   IMU_LIB::KalmanFilter kffortest(15, 6);
 

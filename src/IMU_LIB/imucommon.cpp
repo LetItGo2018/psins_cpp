@@ -108,10 +108,10 @@ extern Eigen::Matrix3d att2cnb(const Eigen::Vector3d &att)
 extern Eigen::Quaterniond cnb2qua(const Eigen::Matrix3d &Cnb)
 {
   double w = 0.0, x = 0.0, y = 0.0, z = 0.0;
-  w = sqrt(abs(1.0 + Cnb(0, 0) + Cnb(1, 1) + Cnb(2, 2))) / 2.0;
-  x = sign(Cnb(2, 1) - Cnb(1, 2)) * sqrt(abs(1.0 + Cnb(0, 0) - Cnb(1, 1) - Cnb(2, 2))) / 2.0;
-  y = sign(Cnb(0, 2) - Cnb(2, 0)) * sqrt(abs(1.0 - Cnb(0, 0) + Cnb(1, 1) - Cnb(2, 2))) / 2.0;
-  z = sign(Cnb(1, 0) - Cnb(0, 1)) * sqrt(abs(1.0 - Cnb(0, 0) - Cnb(1, 1) + Cnb(2, 2))) / 2.0;
+  w = sqrt(std::abs(1.0 + Cnb(0, 0) + Cnb(1, 1) + Cnb(2, 2))) / 2.0;
+  x = sign(Cnb(2, 1) - Cnb(1, 2)) * sqrt(std::abs(1.0 + Cnb(0, 0) - Cnb(1, 1) - Cnb(2, 2))) / 2.0;
+  y = sign(Cnb(0, 2) - Cnb(2, 0)) * sqrt(std::abs(1.0 - Cnb(0, 0) + Cnb(1, 1) - Cnb(2, 2))) / 2.0;
+  z = sign(Cnb(1, 0) - Cnb(0, 1)) * sqrt(std::abs(1.0 - Cnb(0, 0) - Cnb(1, 1) + Cnb(2, 2))) / 2.0;
   return Eigen::Quaterniond(w, x, y, z);
 }
 
