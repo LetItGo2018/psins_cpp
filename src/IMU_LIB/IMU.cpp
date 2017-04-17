@@ -9,7 +9,17 @@
 
 namespace IMU_LIB
 {
-IMU::IMU() :nSamples_(0), prefirst_(1)
+double IMU::gyrbiasRw2_ = 2.0e-5*2.0e-5*0.005*1e3;  //2e-12*1e3
+double IMU::accbiasRw2_ = 3.0e-3*3.0e-3*0.005*1e2;  //4.5e-8*1e2
+
+Eigen::Matrix3d IMU::gyrmeascov_ = Eigen::Matrix3d::Identity()*1.7e-4*1.7e-4 / 0.005 * 10;       // sigma_g * sigma_g / dt, ~6e-6*10
+Eigen::Matrix3d IMU::accmeascov_ = Eigen::Matrix3d::Identity()*2.0e-3*2.0e-3 / 0.005 * 10;       // sigma_a * sigma_a / dt, ~8e-4*10
+
+// covariance of bias random walk
+Eigen::Matrix3d IMU::gyrbiasRWcov_ = Eigen::Matrix3d::Identity()*gyrbiasRw2_;     // sigma_gw * sigma_gw * dt, ~2e-12
+Eigen::Matrix3d IMU::accbiasRWcov_ = Eigen::Matrix3d::Identity()*accbiasRw2_;     // sigma_aw * sigma_aw * dt, ~4.5e-8
+
+IMU::IMU() : nSamples_(0), prefirst_(1)
 {
   phim_.setZero();
   dvbm_.setZero();
@@ -92,5 +102,54 @@ Eigen::Vector3d IMU::Getvm_1() const
 void IMU::Setvm_1(const Eigen::Vector3d &vm)
 {
   vm_1_ = vm;
+}
+
+Eigen::Matrix3d IMU::GetGyrMeasCov()
+{
+  return gyrmeascov_;
+}
+void IMU::SetGyrMeasCov(const Eigen::Matrix3d &gyrmeascov)
+{
+  gyrmeascov_ = gyrmeascov;
+}
+Eigen::Matrix3d IMU::GetAccMeasCov()
+{
+  return accmeascov_;
+}
+void IMU::SetAccMeasCov(const Eigen::Matrix3d &accmeascov)
+{
+  accmeascov_ = accmeascov;
+}
+Eigen::Matrix3d IMU::GetGyrBiasRWCov()
+{
+  return gyrbiasRWcov_;
+}
+void IMU::SetGyrBiasRWCov(const Eigen::Matrix3d &gyrbiasRWcov)
+{
+  gyrbiasRWcov_ = gyrbiasRWcov;
+}
+Eigen::Matrix3d IMU::GetAccBiasRWCov()
+{
+  return accbiasRWcov_;
+}
+void IMU::SetAccBiasRWCov(const Eigen::Matrix3d &accbiasRWcov)
+{
+  accbiasRWcov_ = accbiasRWcov;
+}
+double IMU::GetGyrBiasRW2()
+{
+  return gyrbiasRw2_;
+}
+void IMU::SetGyrBiasRW2(const double &gyrbiasRw2)
+{
+  gyrbiasRw2_ = gyrbiasRw2;
+}
+double IMU::GetAccBiasRW2()
+{
+  return accbiasRw2_;
+}
+void IMU::SetAccBiasRW2(const double &accbiasRw2)
+{
+  accbiasRw2_ = accbiasRw2;
 }
 }

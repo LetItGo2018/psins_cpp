@@ -29,6 +29,8 @@ PSINS::PSINS() :nts_(0.0), eth_(), imu_()
   pos_.setZero();
   eb_.setZero();
   db_.setZero();
+  qib0b_.setIdentity();
+  Kforalgin_.setZero();
 }
 PSINS::PSINS(Eigen::Quaterniond &qnb0, Eigen::Vector3d &vn0, Eigen::Vector3d &pos0) :
     eth_(), imu_(), nts_(0.0), 
@@ -47,9 +49,11 @@ PSINS::PSINS(Eigen::Quaterniond &qnb0, Eigen::Vector3d &vn0, Eigen::Vector3d &po
   an_.setZero();
   web_.setZero();
   wnb_.setZero();
-  att_ = mat2rv(Cnb_);
+  att_ = mat2att(Cnb_);
   eb_.setZero();
   db_.setZero();
+  qib0b_.setIdentity();
+  Kforalgin_.setZero();
 }
 
 void PSINS::Update(std::vector<Eigen::Vector3d> wm, std::vector<Eigen::Vector3d> vm, int nSamples, double ts)
@@ -78,8 +82,49 @@ void PSINS::Update(std::vector<Eigen::Vector3d> wm, std::vector<Eigen::Vector3d>
   //quatmpanother = imu_.Getphim();
   qnb_ = rv2q(-eth_.wnin_*nts_)*qnb_*rv2q(imu_.Getphim());
   Cnb_ = qnb_.matrix();
-  att_ = mat2rv(Cnb_);
+  att_ = mat2att(Cnb_);
 }
+
+Eigen::Matrix3d PSINS::AlignCoarse(Eigen::Vector3d wmm, Eigen::Vector3d vmm, double latitude)
+{
+  double T11, T12, T13, T21, T22, T23, T31, T32, T33;
+  double cl = cos(latitude), tl = tan(latitude);
+  Eigen::Vector3d wbib = wmm/wmm.norm(), fb = vmm /vmm.norm();
+  T31 = fb(0), T32 = fb(1), T33 = fb(2);
+  T21 = wbib(0) / cl - T31*tl, T22 = wbib(1) / cl - T32*tl, T23 = wbib(2) / cl - T33*tl;   
+  double nn = sqrt(T21*T21 + T22*T22 + T23*T23);
+  T11 = T22*T33 - T23*T32, T12 = T23*T31 - T21*T33, T13 = T21*T32 - T22*T31;
+  Eigen::Matrix3d ret;
+  ret << T11, T12, T13, T21, T22, T23, T31, T32, T33;
+  return ret;
+}
+
+Eigen::Matrix3d PSINS::AlignWahba(std::vector<Eigen::Vector3d> wm, std::vector<Eigen::Vector3d> vm, const Eigen::Vector3d &pos, const int &nSamples, const double &ts)
+{
+  IMUCommonStruct imucommonpara;
+  IMUEarthPara imuethpara;
+  double nts = nSamples*ts;
+  imu_.cnscl(wm, vm, nSamples);
+  Eigen::Vector3d vib0 = qib0b_.matrix()*imu_.Getdvbm();
+  Eigen::Vector3d vi0(imuethpara.cl_*cos(nts*imucommonpara.wie_),
+                      imuethpara.cl_*sin(nts*imucommonpara.wie_),
+                      imuethpara.sl_);
+  vi0 *= imucommonpara.g0_*nts;
+  qib0b_ = qib0b_*rv2q(imu_.Getphim());
+  Eigen::Quaterniond rightqua(0.0, vib0(0), vib0(1), vib0(2)), 
+                     leftqua (0.0, vi0(0) , vi0(1) , vi0(2) );
+  Eigen::Matrix4d dM = rq2m(rightqua) - lq2m(leftqua);
+  Kforalgin_ = 0.99991*Kforalgin_ + dM.transpose()*dM*nts;
+  Eigen::EigenSolver<Eigen::Matrix4d> eig(Kforalgin_);
+  //[v, d] = eig(K);  qi0ib0 = v(:, 1);
+  Eigen::Quaterniond qi0ib0;
+  Eigen::Vector3d vforcne(pos(0),nts*imucommonpara.wie_,0.0);
+  Eigen::Matrix3d Cni0 = p2cne(vforcne);
+  Eigen::Quaterniond qni0(Cni0);
+  qnb_ = qni0*qi0ib0*qib0b_;
+  return qnb_.matrix();
+}
+
 void PSINS::etm(Eigen::Matrix3d &Maa, Eigen::Matrix3d &Mav, Eigen::Matrix3d &Map,
   Eigen::Matrix3d &Mva, Eigen::Matrix3d &Mvv, Eigen::Matrix3d &Mvp,
   Eigen::Matrix3d &Mpv, Eigen::Matrix3d &Mpp)
@@ -89,14 +134,14 @@ void PSINS::etm(Eigen::Matrix3d &Maa, Eigen::Matrix3d &Mav, Eigen::Matrix3d &Map
     wN = eth_.wnie_(1), wU = eth_.wnie_(2), vE = vn_(0), vN = vn_(1);
   double f_RMh = eth_.f_RMh_, f_RNh = eth_.f_RNh_, f_clRNh = eth_.f_clRNh_,
     f_RMh2 = f_RMh*f_RMh, f_RNh2 = f_RNh*f_RNh;
-  Eigen::Matrix3d Avn = askew(vn_);
+  Eigen::Matrix3d Avn = Sophus::SO3::hat(vn_);
   Eigen::Matrix3d Mp1; Mp1 << 0, 0, 0, -wU, 0, 0, wN, 0, 0;
   Eigen::Matrix3d Mp2; Mp2 << 0, 0, vN*f_RMh2, 0, 0, -vE*f_RNh2, vE*secl2*f_RNh, 0, -vE*tl*f_RNh2;
-  Maa = askew(-eth_.wnin_);
+  Maa = Sophus::SO3::hat(-eth_.wnin_);
   Mav << 0, -f_RMh, 0, f_RNh, 0, 0, tl*f_RNh, 0, 0;
   Map = Mp1 + Mp2;
-  Mva = askew(fn_);
-  Mvv = Avn*Mav - askew(eth_.wnie_ + eth_.wnin_);
+  Mva = Sophus::SO3::hat(fn_);
+  Mvv = Avn*Mav - Sophus::SO3::hat(eth_.wnie_ + eth_.wnin_);
   Mvp = Avn*(Mp1 + Map);
   double scl = eth_.sl_*eth_.cl_;
   Mvp(2, 0) = Mvp(2, 0) - imucommonpara.g0_*(5.27094e-3 * 2 * scl + 2.32718e-5 * 4 * eth_.sl2_*scl); 

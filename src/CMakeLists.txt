@@ -9,6 +9,12 @@ SET(MY_PROGRAM_LIB_SOURCE
 ./IMU_LIB/imuearth.h
 ./IMU_LIB/psins.cpp
 ./IMU_LIB/psins.h
+./IMU_LIB/IMUPreintegrator.cpp
+./IMU_LIB/IMUPreintegrator.h
+./IMU_LIB/kalmanfilter.cpp
+./IMU_LIB/kalmanfilter.h
+./IMU_LIB/so3.cpp
+./IMU_LIB/so3.h
 )
 
 SET(UNIT_TEST_SOURCE
@@ -19,6 +25,7 @@ SET(UNIT_TEST_SOURCE
 ./unittest/imuearth_unittest.cpp 
 ./unittest/IMU_unittest.cpp      
 ./unittest/PSINS_unittest.cpp 
+./unittest/kalmanfilter_unittest.cpp
 )                                                                     
  
 SET(MAIN_EXE_SOURCE                                   #!!!HERE!!!        

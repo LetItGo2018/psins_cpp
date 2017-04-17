@@ -12,6 +12,8 @@
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 
+#include "IMU_LIB/so3.h"
+
 namespace IMU_LIB
 {
 const double PI = 3.14159265358979;
@@ -55,16 +57,34 @@ struct IMUCommonStruct
   double secpsh_;           //arcsec / sqrt(hour)
 };
 
-////Convert 3x1 vector to 3x3 askew matrix.
-//
-extern Eigen::Matrix3d askew(const Eigen::Vector3d &);
-
 ////Convert rotation vector to transformation quaternion.
 //
 extern Eigen::Quaterniond rv2q(const Eigen::Vector3d &);
 
+////Convert transformation quaternion to rotation vector.
+//
+extern Eigen::Vector3d q2rv(const Eigen::Quaterniond &);
+
+////Convert transformation matrix to att.
+//
+extern Eigen::Vector3d mat2att(const Eigen::Matrix3d &);
 ////Convert transformation matrix to rotation vector.
 //
 extern Eigen::Vector3d mat2rv(const Eigen::Matrix3d &);
+
+////3x1 vector coordinate transformation by quaternion.
+//
+extern Eigen::Vector3d qmulv(const Eigen::Quaterniond &, const Eigen::Vector3d &);
+
+//In quaternion multiplication : q = q1*q2, convert q2 to 4x4 matrix M(q2),
+//so that q1*q2 equals M(q2)*q1, i.e.output mq = M(q2).
+extern Eigen::Matrix4d rq2m(const Eigen::Quaterniond &);
+//In quaternion multiplication : q = q1*q2, convert q1 to 4x4 matrix M(q2),
+//so that q1*q2 equals M(q1)*q2, i.e.output mq = M(q1).
+extern Eigen::Matrix4d lq2m(const Eigen::Quaterniond &);
+
+////Convert geographic pos = [lat; lon; *] to transformation matrix Cne
+//
+extern Eigen::Matrix3d p2cne(const Eigen::Vector3d &);
 }
 #endif//IMU_IMUCOMMON_H

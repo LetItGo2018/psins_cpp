@@ -34,17 +34,6 @@ IMUCommonStruct::IMUCommonStruct()
   secpsh_ = sec_ / sqrt(hur_);
 }
 
-////Convert 3x1 vector to 3x3 askew matrix.
-//
-extern Eigen::Matrix3d askew(const Eigen::Vector3d &v)
-{
-  Eigen::Matrix3d Omega;
-  Omega << 0, -v(2), v(1)
-    , v(2), 0, -v(0)
-    , -v(1), v(0), 0;
-  return Omega;
-}
-
 ////Convert rotation vector to transformation quaternion.
 //
 extern Eigen::Quaterniond rv2q(const Eigen::Vector3d &v)
@@ -70,14 +59,45 @@ extern Eigen::Quaterniond rv2q(const Eigen::Vector3d &v)
   return Eigen::Quaterniond(c, f*v(0), f*v(1), f*v(2));
 }
 
-////Convert transformation matrix to rotation vector.
+extern Eigen::Vector3d q2rv(const Eigen::Quaterniond &q)
+{ 
+  double quasign = 1.0;
+  if (q.coeffs()(3)<0.0)
+  {
+    quasign = -1;
+  }
+  double n2 = acos(quasign*q.coeffs()(3)), k = 0.0;
+  if (n2 > 1e-40)
+  {
+    k = 2 * n2 / sin(n2);
+  }   
+  else
+  {
+    k = 2;
+  }  
+  Eigen::Vector3d rv(q.coeffs()(0), q.coeffs()(1), q.coeffs()(2));
+  return quasign*k*rv;
+}
+
+////Convert transformation matrix to att.
 //
-extern Eigen::Vector3d mat2rv(const Eigen::Matrix3d &Cnb)
+extern Eigen::Vector3d mat2att(const Eigen::Matrix3d &Cnb)
 {
   Eigen::Vector3d ret;
   ret(0) = asinEx(Cnb(2,1));
   ret(1) = atan2Ex(-Cnb(2,0), Cnb(2,2));
   ret(2) = atan2Ex(-Cnb(0,1), Cnb(1,1));
+  //Eigen::Quaterniond qua(Cnb);
+  //ret = q2rv(qua);
+  return ret;
+}
+////Convert transformation matrix to rotation vector.
+//
+extern Eigen::Vector3d mat2rv(const Eigen::Matrix3d &Cnb)
+{
+  Eigen::Vector3d ret;
+  Eigen::Quaterniond qua(Cnb);
+  ret = q2rv(qua);
   return ret;
 }
 
@@ -132,5 +152,42 @@ double atan2Ex(double y, double x)
     res = atan2(y, x);
   }
   return res;
+}
+extern Eigen::Vector3d qmulv(const Eigen::Quaterniond &q, const Eigen::Vector3d &v)
+{
+  //return q._transformVector(v)*q.conjugate();
+  return Eigen::Vector3d::Zero();
+}
+
+extern Eigen::Matrix4d rq2m(const Eigen::Quaterniond &q)
+{
+  Eigen::Matrix4d ret;
+  Eigen::Vector4d qcoeff=q.coeffs();
+  ret << qcoeff(3), -qcoeff(0), -qcoeff(1), -qcoeff(2),
+         qcoeff(0), qcoeff(3), qcoeff(2), -qcoeff(1),
+         qcoeff(1), -qcoeff(2), qcoeff(3), qcoeff(0),
+         qcoeff(2), qcoeff(1), -qcoeff(0), qcoeff(3);
+  return ret;
+}
+extern Eigen::Matrix4d lq2m(const Eigen::Quaterniond &q)
+{
+  Eigen::Matrix4d ret;
+  Eigen::Vector4d qcoeff = q.coeffs();
+  ret << qcoeff(3), -qcoeff(0), -qcoeff(1), -qcoeff(2),
+         qcoeff(0), qcoeff(3), -qcoeff(2), qcoeff(1),
+         qcoeff(1), qcoeff(2), qcoeff(3), -qcoeff(0),
+         qcoeff(2), -qcoeff(1), qcoeff(0), qcoeff(3);
+  return ret;
+}
+
+extern Eigen::Matrix3d p2cne(const Eigen::Vector3d &pos)
+{
+  double slat = sin(pos(0)), clat = cos(pos(0)),
+         slon = sin(pos(1)), clon = cos(pos(1));
+  Eigen::Matrix3d ret;
+  ret <<     -slon,       clon,    0,
+        -slat*clon, -slat*slon, clat,
+         clat*clon,  clat*slon, slat;
+  return ret;
 }
 }
