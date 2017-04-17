@@ -1,35 +1,84 @@
 #include "IMU_LIB/psins.h"
 
+#include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
 
+#include <Eigen/Core>
+#include <Eigen/Eigen>
+
+std::vector<std::string> split(std::string str, std::string pattern);
+
 int main(int agrc, char **argv)
 {
-  Eigen::Vector3d wm1(-0.099134701513277898, 0.14730578886832138, 0.02722713633111154),
-    wm2(-0.099134701513277898, 0.14032447186034408, 0.029321531433504733),
-    wm3(-0.098436569812480182, 0.12775810124598494, 0.037699111843077518),
-    wm4(-0.10262536001726656, 0.11588986233242347, 0.045378560551852569);
-  Eigen::Vector3d vm1(8.1476917083333333, -0.37592158333333331, -2.4026292499999999),
-    vm2(8.033280791666666, -0.40861041666666664, -2.4026292499999999),
-    vm3(7.8861810416666662, -0.42495483333333334, -2.4353180833333332),
-    vm4(7.8289755833333325, -0.37592158333333331, -2.4680069166666665);
-  std::vector<Eigen::Vector3d> wm, vm;
-  wm.push_back(wm1);
-  wm.push_back(wm2);
-  wm.push_back(wm3);
-  wm.push_back(wm4);
-  vm.push_back(vm1);
-  vm.push_back(vm2);
-  vm.push_back(vm3);
-  vm.push_back(vm4);
+  Eigen::Vector3d att0(0.0, 0.0,0.0);
+  Eigen::Vector3d vn0(0.0, 0.0, 0.0);
+  Eigen::Vector3d pos0(0.597706293396019, 1.900832224040738, 380.0);
+  IMU_LIB::PSINS psinsfortest(att0, vn0, pos0);
 
-  Eigen::Quaterniond qnb0(0.999995764425447, -7.249573916614352e-05, 7.273541927842237e-05, -0.002908708492192);
-  Eigen::Vector3d vn0(0.085969838743798, 0.084805706657056, 0.102424996171661);
-  Eigen::Vector3d pos0(0.597706189526688, 1.900832183803790, 3.843311239067717e+02);
-  IMU_LIB::PSINS psinsfortest(qnb0, vn0, pos0);
-
-  psinsfortest.Update(wm, vm, 4, 0.01);
+  std::string imufile = "../../data/input/imu.dat";
+  std::string posfile = "../../data/output/pos.txt";
+  std::ifstream fpimu(imufile);
+  std::ofstream fppos(posfile);
+  if (!fpimu)
+  {
+    std::cout << "open file error!" << std::endl;
+    return -1;
+  }
+  std::string line;
+  std::vector<Eigen::Vector3d> wmm, vmm;
+  while (!fpimu.eof())
+  {
+    std::vector<std::string> imudata;
+    std::getline(fpimu,line);
+    imudata = split(line, ",");
+    if (imudata.size() != 7)
+    {
+      break;
+    }
+    Eigen::Vector3d wm(std::atof(imudata[1].c_str()),
+                       std::atof(imudata[2].c_str()),
+                       std::atof(imudata[3].c_str()));
+    Eigen::Vector3d vm(std::atof(imudata[4].c_str()),
+                       std::atof(imudata[5].c_str()),
+                       std::atof(imudata[6].c_str()));
+    wmm.push_back(wm);
+    vmm.push_back(vm);
+    if (wmm.size() == 4)
+    {
+      psinsfortest.Update(wmm, vmm, 4, 0.01);
+      char tmp[1024];
+      sprintf(tmp, "%.10f %.10f %.10f", psinsfortest.pos_(0), psinsfortest.pos_(1), psinsfortest.pos_(2));
+      fppos << tmp << std::endl;
+      std::cout << psinsfortest.pos_(0) << " " << psinsfortest.pos_(1) << " " << psinsfortest.pos_(2) << std::endl;
+      wmm.clear();
+      vmm.clear();
+    }
+  }
+  fppos.close();
+  fpimu.close();
+  int a = 0;
   return 0;
+}
+
+std::vector<std::string> split(std::string str, std::string pattern)
+{
+  std::string::size_type pos;
+  std::vector<std::string> result;
+  str += pattern;//扩展字符串以方便操作
+  int size = str.size();
+
+  for (int i = 0; i < size; i++)
+  {
+    pos = str.find(pattern, i);
+    if (pos < size)
+    {
+      std::string s = str.substr(i, pos - i);
+      result.push_back(s);
+      i = pos + pattern.size() - 1;
+    }
+  }
+  return result;
 }

@@ -67,7 +67,16 @@ extern Eigen::Vector3d q2rv(const Eigen::Quaterniond &);
 
 ////Convert transformation matrix to att.
 //
-extern Eigen::Vector3d mat2att(const Eigen::Matrix3d &);
+extern Eigen::Vector3d cnb2att(const Eigen::Matrix3d &);
+
+////Convert att to transformation matrix.
+//
+extern Eigen::Matrix3d att2cnb(const Eigen::Vector3d &att);
+
+////Convert transformation matrix to qua.
+//
+extern Eigen::Quaterniond cnb2qua(const Eigen::Matrix3d &);
+
 ////Convert transformation matrix to rotation vector.
 //
 extern Eigen::Vector3d mat2rv(const Eigen::Matrix3d &);

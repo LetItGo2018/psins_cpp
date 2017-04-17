@@ -24,6 +24,8 @@ class PSINS
 public:
   PSINS();
   PSINS(Eigen::Quaterniond &qnb0, Eigen::Vector3d &vn0, Eigen::Vector3d &pos0);
+  PSINS(Eigen::Vector3d &att0, Eigen::Vector3d &vn0, Eigen::Vector3d &pos0);
+  PSINS(Eigen::Matrix3d &Cnb0, Eigen::Vector3d &vn0, Eigen::Vector3d &pos0);
 
   void Update(std::vector<Eigen::Vector3d> wm, std::vector<Eigen::Vector3d> vm, int nSamples, double ts);
   Eigen::Matrix3d AlignCoarse(Eigen::Vector3d wmm, Eigen::Vector3d vmm, double latitude);

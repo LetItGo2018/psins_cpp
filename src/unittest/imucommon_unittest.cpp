@@ -72,3 +72,39 @@ TEST(IMUCommonStructTEST, _mat2rv)
   EXPECT_DOUBLE_EQ(-0.0069718099614269162, vfortest(1));
   EXPECT_DOUBLE_EQ(-1.485387001915522, vfortest(2));
 }
+
+TEST(IMUCommonStructTEST, _cnb2qua)
+{
+  Eigen::Vector3d vfortest = Eigen::Vector3d::Zero();
+  Eigen::Matrix3d matfortest;
+  matfortest << 0.085309194526092, 0.996249649044780, -0.014456075105735,
+    -0.996341454551220, 0.085224776096737, -0.006359519008647,
+    -0.005103652816334, 0.014945712342151, 0.999875281427897;
+  Eigen::Quaterniond quafortest(0.736615444457066, 0.007230784906533335, -0.0031741196711855342, -0.676265722701711);
+
+  Eigen::Quaterniond qua=IMU_LIB::cnb2qua(matfortest);
+  for (int i = 0; i < 4; ++i)
+  {
+    EXPECT_FLOAT_EQ(qua.coeffs()(i), quafortest.coeffs()(i));
+  }
+
+}
+
+TEST(IMUCommonStructTEST, _cnb2att)
+{
+  Eigen::Matrix3d matfortest;
+  matfortest << 0.085309194526092, 0.996249649044780, -0.014456075105735,
+    -0.996341454551220, 0.085224776096737, -0.006359519008647,
+    -0.005103652816334, 0.014945712342151, 0.999875281427897;
+  
+  Eigen::Vector3d att = IMU_LIB::cnb2att(matfortest);
+  Eigen::Matrix3d cnb = IMU_LIB::att2cnb(att);
+
+  for (int i = 0; i < 3; ++i)
+  {
+    for (int j = 0; j < 3; ++j)
+    {
+      EXPECT_FLOAT_EQ(cnb(i, j), matfortest(i, j));
+    }
+  }
+}

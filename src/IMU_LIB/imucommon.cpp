@@ -81,7 +81,7 @@ extern Eigen::Vector3d q2rv(const Eigen::Quaterniond &q)
 
 ////Convert transformation matrix to att.
 //
-extern Eigen::Vector3d mat2att(const Eigen::Matrix3d &Cnb)
+extern Eigen::Vector3d cnb2att(const Eigen::Matrix3d &Cnb)
 {
   Eigen::Vector3d ret;
   ret(0) = asinEx(Cnb(2,1));
@@ -91,6 +91,30 @@ extern Eigen::Vector3d mat2att(const Eigen::Matrix3d &Cnb)
   //ret = q2rv(qua);
   return ret;
 }
+
+////Convert att to transformation matrix.
+//
+extern Eigen::Matrix3d att2cnb(const Eigen::Vector3d &att)
+{
+  Eigen::Matrix3d Cnb;
+  double si = sin(att(0)), sj = sin(att(1)), sk = sin(att(2));
+  double ci = cos(att(0)), cj = cos(att(1)), ck = cos(att(2));
+  Cnb <<cj*ck - si*sj*sk, -ci*sk , sj*ck + si*cj*sk,
+        cj*sk + si*sj*ck,  ci*ck , sj*sk - si*cj*ck,
+       -ci*sj           ,  si    , ci*cj;
+  return Cnb;
+}
+
+extern Eigen::Quaterniond cnb2qua(const Eigen::Matrix3d &Cnb)
+{
+  double w = 0.0, x = 0.0, y = 0.0, z = 0.0;
+  w = sqrt(abs(1.0 + Cnb(0, 0) + Cnb(1, 1) + Cnb(2, 2))) / 2.0;
+  x = sign(Cnb(2, 1) - Cnb(1, 2)) * sqrt(abs(1.0 + Cnb(0, 0) - Cnb(1, 1) - Cnb(2, 2))) / 2.0;
+  y = sign(Cnb(0, 2) - Cnb(2, 0)) * sqrt(abs(1.0 - Cnb(0, 0) + Cnb(1, 1) - Cnb(2, 2))) / 2.0;
+  z = sign(Cnb(1, 0) - Cnb(0, 1)) * sqrt(abs(1.0 - Cnb(0, 0) - Cnb(1, 1) + Cnb(2, 2))) / 2.0;
+  return Eigen::Quaterniond(w, x, y, z);
+}
+
 ////Convert transformation matrix to rotation vector.
 //
 extern Eigen::Vector3d mat2rv(const Eigen::Matrix3d &Cnb)

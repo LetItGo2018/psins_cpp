@@ -49,7 +49,57 @@ PSINS::PSINS(Eigen::Quaterniond &qnb0, Eigen::Vector3d &vn0, Eigen::Vector3d &po
   an_.setZero();
   web_.setZero();
   wnb_.setZero();
-  att_ = mat2att(Cnb_);
+  att_ = cnb2att(Cnb_);
+  eb_.setZero();
+  db_.setZero();
+  qib0b_.setIdentity();
+  Kforalgin_.setZero();
+}
+PSINS::PSINS(Eigen::Vector3d &att0, Eigen::Vector3d &vn0, Eigen::Vector3d &pos0) :
+    eth_(), imu_(), nts_(0.0),
+    att_(att0), vn_(vn0), pos_(pos0)
+{
+  Cnb_ = att2cnb(att_);
+  qnb_=Eigen::Quaterniond(Cnb_);
+  //eth_ = IMUEarthPara();
+  eth_.Update(pos0, vn0);
+  //imu_ = IMU();
+  
+  Cnb0_ = Cnb_;
+  Kg_.setIdentity();
+  Ka_.setIdentity();
+  wib_.setZero();
+  fb_.setZero();
+  fn_.setZero();
+  an_.setZero();
+  web_.setZero();
+  wnb_.setZero();
+  att_ = cnb2att(Cnb_);
+  eb_.setZero();
+  db_.setZero();
+  qib0b_.setIdentity();
+  Kforalgin_.setZero();
+}
+PSINS::PSINS(Eigen::Matrix3d &Cnb0, Eigen::Vector3d &vn0, Eigen::Vector3d &pos0) :
+    eth_(), imu_(), nts_(0.0),
+    Cnb_(Cnb0), vn_(vn0), pos_(pos0)
+{
+  //eth_ = IMUEarthPara();
+  eth_.Update(pos0, vn0);
+  //imu_ = IMU();
+  //Cnb_ = qnb_.matrix();
+  att_ = cnb2att(Cnb_);
+  qnb_ = cnb2qua(Cnb_);
+  Cnb0_ = Cnb_;
+  Kg_.setIdentity();
+  Ka_.setIdentity();
+  wib_.setZero();
+  fb_.setZero();
+  fn_.setZero();
+  an_.setZero();
+  web_.setZero();
+  wnb_.setZero();
+
   eb_.setZero();
   db_.setZero();
   qib0b_.setIdentity();
@@ -82,7 +132,7 @@ void PSINS::Update(std::vector<Eigen::Vector3d> wm, std::vector<Eigen::Vector3d>
   //quatmpanother = imu_.Getphim();
   qnb_ = rv2q(-eth_.wnin_*nts_)*qnb_*rv2q(imu_.Getphim());
   Cnb_ = qnb_.matrix();
-  att_ = mat2att(Cnb_);
+  att_ = cnb2att(Cnb_);
 }
 
 Eigen::Matrix3d PSINS::AlignCoarse(Eigen::Vector3d wmm, Eigen::Vector3d vmm, double latitude)
@@ -115,9 +165,9 @@ Eigen::Matrix3d PSINS::AlignWahba(std::vector<Eigen::Vector3d> wm, std::vector<E
                      leftqua (0.0, vi0(0) , vi0(1) , vi0(2) );
   Eigen::Matrix4d dM = rq2m(rightqua) - lq2m(leftqua);
   Kforalgin_ = 0.99991*Kforalgin_ + dM.transpose()*dM*nts;
-  Eigen::EigenSolver<Eigen::Matrix4d> eig(Kforalgin_);
-  //[v, d] = eig(K);  qi0ib0 = v(:, 1);
-  Eigen::Quaterniond qi0ib0;
+  Eigen::SelfAdjointEigenSolver<Eigen::Matrix4d> eig(Kforalgin_);
+  Eigen::Matrix4d matofv = eig.eigenvectors();
+  Eigen::Quaterniond qi0ib0(matofv(0, 0), matofv(1,0), matofv(2,0), matofv(3,0));
   Eigen::Vector3d vforcne(pos(0),nts*imucommonpara.wie_,0.0);
   Eigen::Matrix3d Cni0 = p2cne(vforcne);
   Eigen::Quaterniond qni0(Cni0);
