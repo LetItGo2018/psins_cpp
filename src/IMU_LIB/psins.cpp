@@ -135,6 +135,25 @@ void PSINS::Update(std::vector<Eigen::Vector3d> wm, std::vector<Eigen::Vector3d>
   att_ = cnb2att(Cnb_);
 }
 
+void PSINS::CnbAttQnbSyn(Eigen::Quaterniond &qnb0)
+{
+  qnb_ = qnb0;
+  Cnb_ = qnb_.matrix();
+  att_ = cnb2att(Cnb_);
+}
+void PSINS::CnbAttQnbSyn(Eigen::Vector3d &att0)
+{
+  att_ = att0;
+  Cnb_ = att2cnb(att_);
+  qnb_ = cnb2qua(Cnb_);
+}
+void PSINS::CnbAttQnbSyn(Eigen::Matrix3d &Cnb0)
+{
+  Cnb_ = Cnb0;
+  att_ = cnb2att(Cnb_);
+  qnb_ = cnb2qua(Cnb_);
+}
+
 Eigen::Matrix3d PSINS::AlignCoarse(Eigen::Vector3d wmm, Eigen::Vector3d vmm, double latitude)
 {
   double T11, T12, T13, T21, T22, T23, T31, T32, T33;

@@ -28,6 +28,9 @@ public:
   PSINS(Eigen::Matrix3d &Cnb0, Eigen::Vector3d &vn0, Eigen::Vector3d &pos0);
 
   void Update(std::vector<Eigen::Vector3d> wm, std::vector<Eigen::Vector3d> vm, int nSamples, double ts);
+  void CnbAttQnbSyn(Eigen::Quaterniond &qnb0);
+  void CnbAttQnbSyn(Eigen::Vector3d &att0);
+  void CnbAttQnbSyn(Eigen::Matrix3d &Cnb0);
   Eigen::Matrix3d AlignCoarse(Eigen::Vector3d wmm, Eigen::Vector3d vmm, double latitude);
   Eigen::Matrix3d AlignWahba(std::vector<Eigen::Vector3d> wm, std::vector<Eigen::Vector3d> vm, const Eigen::Vector3d &pos, const int &nSamples, const double &ts);
   void etm(Eigen::Matrix3d &Maa, Eigen::Matrix3d &Mav, Eigen::Matrix3d &Map,
