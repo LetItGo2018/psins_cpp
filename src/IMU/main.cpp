@@ -52,14 +52,13 @@ int main(int agrc, char **argv)
       char tmp[1024];
       sprintf(tmp, "%.10f %.10f %.10f", psinsfortest.pos_(0), psinsfortest.pos_(1), psinsfortest.pos_(2));
       fppos << tmp << std::endl;
-      std::cout << psinsfortest.pos_(0) << " " << psinsfortest.pos_(1) << " " << psinsfortest.pos_(2) << std::endl;
+      std::cout << tmp << std::endl;
       wmm.clear();
       vmm.clear();
     }
   }
   fppos.close();
   fpimu.close();
-  int a = 0;
   return 0;
 }
 
