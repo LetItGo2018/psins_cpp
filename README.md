@@ -10,7 +10,7 @@ Precise Strapdown Inertial Navigation System (PSINS) toolbox for C++ is an open 
 PSINS_CPP is released under [the BSD 2-clause license](http://opensource.org/licenses/BSD-2-Clause).
 
 # 2. Prerequisites
-PSINS_CPP requires cmake and Eigen3 to build. We have tested the library in **Win 7** and **MacOS 10.12.4**, but it should be easy to compile in other platforms.
+PSINS_CPP requires cmake and Eigen3 to build. I have tested the library in **Win 7** and **MacOS 10.12.4**, but it should be easy to compile in other platforms.
 
 ## cmake
 Download and install instructions can be found at: http://www.cmake.org/. **Required at least 2.8.0**.
@@ -20,7 +20,9 @@ Download and install instructions can be found at: http://eigen.tuxfamily.org. *
 
 # 3. Struct
 IMU
+
 IMU_LIB
+
 IMU_UNIT_TEST
 
 # 4. BIG THANKS
