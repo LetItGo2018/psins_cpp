@@ -19,31 +19,47 @@
 
 namespace IMU_LIB
 {
+class KalmanFilterBase
+{
+public:
+  KalmanFilterBase();
+  KalmanFilterBase(int q0, int r0);
+  void SetPk(double f, ...);
+  void SetQt(double f, ...);
+  void SetRk(double f, ...);
+  void SetZk(double f, ...);
+  void SetFt(){};
+  void SetHk(){};
+  void TimeUpdate(double ts);
+  void MeasUpdate(double fading = 1.0);
 
-  class KalmanFilter
-  {
-  public:
-    KalmanFilter();
-    KalmanFilter(int q0, int r0);
-    void SetPk(double f, ...);
-    void SetQt(double f, ...);
-    void SetRk(double f, ...);
-    void SetZk(double f, ...);
-    void SetFt(PSINS &sins);
-    void SetHk(void);
-    void TimeUpdate(double ts);
-    void MeasUpdate(double fading = 1.0);
+  int q_;
+  int r_;
+  Eigen::VectorXd Xk_;
+  Eigen::VectorXd Zk_;
+  Eigen::MatrixXd Ft_;
+  Eigen::MatrixXd Pk_;
+  Eigen::MatrixXd Qt_;
+  Eigen::MatrixXd Hk_;
+  Eigen::MatrixXd Rk_;
+};
+class KalmanFilter:public KalmanFilterBase
+{
+public:
+  KalmanFilter() :KalmanFilterBase(){}
+  KalmanFilter(int q0, int r0) :KalmanFilterBase(q0, r0){}
+  void SetFt(PSINS &sins);
+  void SetHk(void);
+};
 
-    int q_;
-    int r_;
-    Eigen::VectorXd Xk_;
-    Eigen::VectorXd Zk_;
-    Eigen::MatrixXd Ft_;
-    Eigen::MatrixXd Pk_;
-    Eigen::MatrixXd Qt_;
-    Eigen::MatrixXd Hk_;
-    Eigen::MatrixXd Rk_;
-  };
+class KalmanFilterForAlignfn :public KalmanFilterBase
+{
+public:
+  KalmanFilterForAlignfn() :KalmanFilterBase(5,2){}
+  //KalmanFilterForAlignfn(int q0, int r0) :KalmanFilterBase(q0, r0){}
+  void SetFt(Eigen::Vector3d &pos);
+  void SetHk(Eigen::Vector3d &pos);
+};
 
 }
 

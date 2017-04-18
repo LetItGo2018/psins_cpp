@@ -173,18 +173,25 @@ Eigen::Matrix3d PSINS::AlignWahba(std::vector<Eigen::Vector3d> wm, std::vector<E
   IMUCommonStruct imucommonpara;
   IMUEarthPara imuethpara;
   double nts = nSamples*ts;
+  imuethpara.Update(pos, Eigen::Vector3d::Zero());
   imu_.cnscl(wm, vm, nSamples);
   Eigen::Vector3d vib0 = qib0b_.matrix()*imu_.Getdvbm();
   Eigen::Vector3d vi0(imuethpara.cl_*cos(nts*imucommonpara.wie_),
                       imuethpara.cl_*sin(nts*imucommonpara.wie_),
                       imuethpara.sl_);
-  vi0 *= imucommonpara.g0_*nts;
+  vi0 *= -imuethpara.gn_(2)*nts;
   qib0b_ = qib0b_*rv2q(imu_.Getphim());
   Eigen::Quaterniond rightqua(0.0, vib0(0), vib0(1), vib0(2)), 
                      leftqua (0.0, vi0(0) , vi0(1) , vi0(2) );
-  Eigen::Matrix4d dM = rq2m(rightqua) - lq2m(leftqua);
+  Eigen::Matrix4d dMr = rq2m(rightqua);
+  Eigen::Matrix4d dMl = lq2m(leftqua);
+  Eigen::Matrix4d dM = dMr - dMl;
   Kforalgin_ = 0.99991*Kforalgin_ + dM.transpose()*dM*nts;
   Eigen::SelfAdjointEigenSolver<Eigen::Matrix4d> eig(Kforalgin_);
+  //if (fabs(eig.eigenvalues()(3) / eig.eigenvalues()(0)) > 1.0e8)
+  //{
+  //  return qnb_.matrix();
+  //}
   Eigen::Matrix4d matofv = eig.eigenvectors();
   Eigen::Quaterniond qi0ib0(matofv(0, 0), matofv(1,0), matofv(2,0), matofv(3,0));
   Eigen::Vector3d vforcne(pos(0),nts*imucommonpara.wie_,0.0);

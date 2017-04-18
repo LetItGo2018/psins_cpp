@@ -19,8 +19,9 @@ class IMUEarthPara
 {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    IMUEarthPara();
+  IMUEarthPara();
   IMUEarthPara(double a0, double f0, double g0);
+  IMUEarthPara(const Eigen::Vector3d &pos);
 
   //Update the Earth related parameters
   void Update(const Eigen::Vector3d &pos, const Eigen::Vector3d &vn);

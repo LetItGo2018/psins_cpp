@@ -9,7 +9,7 @@
 
 namespace IMU_LIB
 {
-KalmanFilter::KalmanFilter()
+  KalmanFilterBase::KalmanFilterBase()
 {
   q_ = 15;
   r_ = 6;
@@ -28,7 +28,7 @@ KalmanFilter::KalmanFilter()
   Hk_.setZero();
   Rk_.setZero();
 }
-KalmanFilter::KalmanFilter(int q0, int r0)
+  KalmanFilterBase::KalmanFilterBase(int q0, int r0)
 {
   q_ = q0;
   r_ = r0;
@@ -47,7 +47,7 @@ KalmanFilter::KalmanFilter(int q0, int r0)
   Hk_.setZero();
   Rk_.setZero();
 }
-void KalmanFilter::TimeUpdate(double ts)
+void KalmanFilterBase::TimeUpdate(double ts)
 {
   Eigen::MatrixXd Fk = Ft_*ts;
   for (int i = 0; i < Fk.cols(); ++i)
@@ -57,7 +57,7 @@ void KalmanFilter::TimeUpdate(double ts)
   Xk_ = Fk * Xk_;
   Pk_ = Fk*Pk_*Fk.transpose() + Qt_*ts;
 }
-void KalmanFilter::MeasUpdate(double fading)
+void KalmanFilterBase::MeasUpdate(double fading)
 {
   Eigen::MatrixXd Pxykk_1 = Pk_*Hk_.transpose();
   Eigen::MatrixXd Py0 = Hk_*Pxykk_1;
@@ -80,7 +80,7 @@ void KalmanFilter::MeasUpdate(double fading)
   }
   if (fading>1.0) Pk_ = Pk_*fading;*/
 }
-void KalmanFilter::SetPk(double f, ...)
+void KalmanFilterBase::SetPk(double f, ...)
 {
   va_list vl;
   va_start(vl, f);
@@ -90,7 +90,7 @@ void KalmanFilter::SetPk(double f, ...)
   }
   va_end(vl);
 }
-void KalmanFilter::SetQt(double f, ...)
+void KalmanFilterBase::SetQt(double f, ...)
 {
   va_list vl;
   va_start(vl, f);
@@ -100,7 +100,7 @@ void KalmanFilter::SetQt(double f, ...)
   }
   va_end(vl);
 }
-void KalmanFilter::SetRk(double f, ...)
+void KalmanFilterBase::SetRk(double f, ...)
 {
   va_list vl;
   va_start(vl, f);
@@ -110,7 +110,7 @@ void KalmanFilter::SetRk(double f, ...)
   }
   va_end(vl);
 }
-void KalmanFilter::SetZk(double f, ...)
+void KalmanFilterBase::SetZk(double f, ...)
 {
   va_list vl;
   va_start(vl, f);
@@ -120,6 +120,7 @@ void KalmanFilter::SetZk(double f, ...)
   }
   va_end(vl);
 }
+
 void KalmanFilter::SetFt(PSINS &sins)
 {
   Eigen::Matrix3d Maa, Mav, Map, Mva, Mvv, Mvp, Mpv, Mpp, Cnb;
@@ -159,5 +160,23 @@ void KalmanFilter::SetHk(void)
 {
   //	Hk(0,6) = Hk(1,7) = Hk(2,8) = 1.0;
   Hk_(0, 3) = Hk_(1, 4) = Hk_(2, 5) = 1.0; Hk_(3, 6) = Hk_(4, 7) = Hk_(5, 8) = 1.0;
+}
+
+void KalmanFilterForAlignfn::SetFt(Eigen::Vector3d &pos)
+{
+  IMUEarthPara imuethparam(pos);
+  double wN = imuethparam.wnie_(1), wU = imuethparam.wnie_(2);
+  Ft_ <<  0, wU, -wN,  0,  0,
+        -wU,  0,   0, -1,  0,
+         wN,  0,   0,  0, -1,
+          0,  0,   0,  0,  0,
+          0,  0,   0,  0,  0;
+}
+void KalmanFilterForAlignfn::SetHk(Eigen::Vector3d &pos)
+{
+  IMUEarthPara imuethparam(pos);
+  double g = -imuethparam.gn_(2);
+  Hk_ << 0, -g, 0, 0, 0,
+         g,  0, 0, 0, 0;
 }
 }

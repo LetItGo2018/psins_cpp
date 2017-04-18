@@ -13,10 +13,10 @@
 #include "IMU_LIB/imucommon.h"
 namespace IMU_LIB
 {
-IMUEarthPara::IMUEarthPara()
-  :lti_(0.0), hgt_(0.0), sl_(0.0), sl2_(0.0), sl4_(0.0),
-  cl_(1.0), tl_(0.0), RMh_(6371137.0), RNh_(6371137.0), clRNh_(cl_*RNh_),
-  f_RMh_(0.0), f_RNh_(0.0), f_clRNh_(0.0)
+IMUEarthPara::IMUEarthPara() :
+    lti_(0.0), hgt_(0.0), sl_(0.0), sl2_(0.0), sl4_(0.0),
+    cl_(1.0), tl_(0.0), RMh_(6371137.0), RNh_(6371137.0), clRNh_(cl_*RNh_),
+    f_RMh_(0.0), f_RNh_(0.0), f_clRNh_(0.0)
 {
   const IMUCommonStruct imucommonparameters;
   a_ = imucommonparameters.Re_;
@@ -27,6 +27,34 @@ IMUEarthPara::IMUEarthPara()
   e2_ = e_*e_;
   ep_ = sqrt(e2_ / (1 - e2_));
   ep2_ = ep_*ep_;
+  gn_ = Eigen::Vector3d(0, 0, -imucommonparameters.g0_);
+  wnie_.setZero();
+  wnen_.setZero();
+  wnin_.setZero();
+  gcc_.setZero();
+}
+IMUEarthPara::IMUEarthPara(const Eigen::Vector3d &pos) :
+    lti_(pos(0)), hgt_(pos(2)), f_RMh_(0.0), f_RNh_(0.0), f_clRNh_(0.0)
+{
+  const IMUCommonStruct imucommonparameters;
+  a_ = imucommonparameters.Re_;
+  f_ = imucommonparameters.f_;
+  wie_ = imucommonparameters.wie_;
+  b_ = (1 - f_)*a_;
+  e_ = sqrt(a_*a_ - b_*b_) / a_;
+  e2_ = e_*e_;
+  ep_ = sqrt(e2_ / (1 - e2_));
+  ep2_ = ep_*ep_;
+  sl_ = sin(pos(0));
+  sl2_ = sl_*sl_;
+  sl4_ = sl2_*sl2_;  
+  cl_ = cos(pos(0));
+  tl_ = cl_ == 0.0 ? 1.0e15 : sl_ / cl_;
+  double sq = 1 - imucommonparameters.e2_*sl2_;
+  double sq2 = sqrt(sq);
+  RMh_ = imucommonparameters.Re_*(1 - imucommonparameters.e2_) / sq / sq2 + pos(2);
+  RNh_ = imucommonparameters.Re_ / sq2+pos(2);
+  clRNh_ = cl_*RNh_;
   gn_ = Eigen::Vector3d(0, 0, -imucommonparameters.g0_);
   wnie_.setZero();
   wnen_.setZero();
