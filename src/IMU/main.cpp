@@ -70,11 +70,11 @@ void pureins()
       break;
     }
     Eigen::Vector3d wm(std::atof(imudata[1].c_str()),
-      std::atof(imudata[2].c_str()),
-      std::atof(imudata[3].c_str()));
+                       std::atof(imudata[2].c_str()),
+                       std::atof(imudata[3].c_str()));
     Eigen::Vector3d vm(std::atof(imudata[4].c_str()),
-      std::atof(imudata[5].c_str()),
-      std::atof(imudata[6].c_str()));
+                       std::atof(imudata[5].c_str()),
+                       std::atof(imudata[6].c_str()));
     wmm.push_back(wm);
     vmm.push_back(vm);
     if (wmm.size() == 4)
@@ -122,18 +122,18 @@ void InsAlignandNav()
       break;
     }
     Eigen::Vector3d wm(std::atof(imudata[1].c_str()),
-      std::atof(imudata[2].c_str()),
-      std::atof(imudata[3].c_str()));
+                       std::atof(imudata[2].c_str()),
+                       std::atof(imudata[3].c_str()));
     Eigen::Vector3d vm(std::atof(imudata[4].c_str()),
-      std::atof(imudata[5].c_str()),
-      std::atof(imudata[6].c_str()));
+                       std::atof(imudata[5].c_str()),
+                       std::atof(imudata[6].c_str()));
     wmm.push_back(wm);
     vmm.push_back(vm);
     if (wmm.size() == 4)
     {
       if (epochcount <= staticepochnum)
       {
-        psinsfortest.Cnb0_=psinsfortest.AlignWahba(wmm, vmm, pos0, 4, 0.01);
+        psinsfortest.Cnb_=psinsfortest.AlignWahba(wmm, vmm, pos0, 4, 0.01);
         psinsfortest.CnbAttQnbSyn(psinsfortest.qnb_);
         char tmp[1024];
         sprintf(tmp, "att: %.10f %.10f %.10f", psinsfortest.att_(0), psinsfortest.att_(1), psinsfortest.att_(2));
@@ -184,17 +184,17 @@ void InsAlign()
       break;
     }
     Eigen::Vector3d wm(std::atof(imudata[1].c_str()),
-      std::atof(imudata[2].c_str()),
-      std::atof(imudata[3].c_str()));
+                       std::atof(imudata[2].c_str()),
+                       std::atof(imudata[3].c_str()));
     Eigen::Vector3d vm(std::atof(imudata[4].c_str()),
-      std::atof(imudata[5].c_str()),
-      std::atof(imudata[6].c_str()));
+                       std::atof(imudata[5].c_str()),
+                       std::atof(imudata[6].c_str()));
     wmm.push_back(wm);
     vmm.push_back(vm);
     if (wmm.size() == 4)
     {    
-      psinsfortest.Cnb0_ = psinsfortest.AlignWahba(wmm, vmm, pos0, 4, 0.1);
-      //psinsfortest.Cnb0_ = psinsfortest.AlignCoarse(wm, vm, pos0(0));
+      psinsfortest.Cnb_ = psinsfortest.AlignWahba(wmm, vmm, pos0, 4, 0.1);
+      //psinsfortest.Cnb_ = psinsfortest.AlignCoarse(wm, vm, pos0(0));
       psinsfortest.CnbAttQnbSyn(psinsfortest.Cnb_);
       char tmp[1024];
       sprintf(tmp, "att: %.10f %.10f %.10f", psinsfortest.att_(0), psinsfortest.att_(1), psinsfortest.att_(2));

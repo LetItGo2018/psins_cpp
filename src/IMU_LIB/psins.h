@@ -42,6 +42,7 @@ public:
            Eigen::Matrix3d &Mpv, Eigen::Matrix3d &Mpp);
 
   double nts_;
+  double kts_;
   IMUEarthPara eth_;
   IMU imu_;
   Eigen::Quaterniond qnb_;
